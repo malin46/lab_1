@@ -246,35 +246,118 @@ class Shelter:
                 self.animals.append(obj)
 
 
-# Проверка работы
+# Интерактивный интерфейс командной строки (CLI)
 if __name__ == "__main__":
     s = Shelter("Уютный дом")
 
-    # тестовые данные
-    d = Dog("Шарик", 3, "Овчарка", True)
-    c = Cat("Барсик", 2, "Британская", True)
-    b = Bird("Чика", 1, "Канарейка", True)
+    # Добавим стартовых питомцев для удобства
+    s.add(Dog("Шарик", 3, "Овчарка", True))
+    s.add(Cat("Барсик", 2, "Британская", True))
+    s.add(Bird("Чика", 1, "Канарейка", True))
 
-    s.add(d)
-    s.add(c)
-    s.add(b)
+    while True:
+        print("\n==================================================")
+        print("           СИСТЕМА УПРАВЛЕНИЯ ПРИЮТОМ")
+        print("==================================================")
+        print(" [1] Вывести список всех животных")
+        print(" [2] Добавить нового питомца (Собака / Кошка / Птица)")
+        print(" [3] Найти питомца по имени")
+        print(" [4] Изменить возраст питомца")
+        print(" [5] Удалить питомца из базы")
+        print(" [6] Сохранить данные (в JSON / XML)")
+        print(" [7] Загрузить данные из файла")
+        print(" [0] Выход из программы")
+        print("--------------------------------------------------")
 
-    print("Список животных:")
-    for animal in s.get_all():
-        print(f"- {animal.name}, возраст: {animal.age}")
+        choice = input("Введите номер пункта меню: ").strip()
 
-    # проверка ошибок
-    try:
-        s.find("Бобби")
-    except NotFoundError as e:
-        print("Ошибка поймана:", e)
+        if choice == "1":
+            print("\n--- СПИСОК ЖИВОТНЫХ ---")
+            animals = s.get_all()
+            if not animals:
+                print("Приют пуст.")
+            for a in animals:
+                print(f"[{a.__class__.__name__}] Имя: {a.name}, Возраст: {a.age}, Порода: {a.breed}")
 
-    try:
-        s.update_age("Шарик", -2)
-    except BadAgeError as e:
-        print("Ошибка поймана:", e)
+        elif choice == "2":
+            print("\n--- ДОБАВЛЕНИЕ НОВОГО ПИТОМЦА ---")
+            t_type = input("Выберите тип (1 - Собака, 2 - Кошка, 3 - Птица): ").strip()
+            name = input("Введите кличку: ").strip()
+            try:
+                age = int(input("Введите возраст: ").strip())
+            except ValueError:
+                print("Ошибка: возраст должен быть целым числом!")
+                continue
+            breed = input("Введите породу: ").strip()
 
-    # сохраняем в файлы
-    s.save_json("out.json")
-    s.save_xml("out.xml")
-    print("Всё сохранилось!")
+            try:
+                if t_type == "1":
+                    guard_input = input("Является ли охранником (True/False): ").strip().capitalize() == "True"
+                    s.add(Dog(name, age, breed, guard_input))
+                elif t_type == "2":
+                    mouser_input = input("Является ли мышеловом (True/False): ").strip().capitalize() == "True"
+                    s.add(Cat(name, age, breed, mouser_input))
+                elif t_type == "3":
+                    singing_input = input("Умеет ли петь (True/False): ").strip().capitalize() == "True"
+                    s.add(Bird(name, age, breed, singing_input))
+                else:
+                    s.add(Animal(name, age, breed))
+                print("Питомец успешно добавлен в базу приюта!")
+            except BadAgeError as e:
+                print(f"Ошибка: {e}")
+
+        elif choice == "3":
+            name = input("\nВведите кличку для поиска: ").strip()
+            try:
+                a = s.find(name)
+                print(f"Найдено: [{a.__class__.__name__}] Имя: {a.name}, Возраст: {a.age}, Порода: {a.breed}")
+            except NotFoundError as e:
+                print(f"Ошибка: {e}")
+
+        elif choice == "4":
+            name = input("\nВведите кличку питомца: ").strip()
+            try:
+                new_age = int(input("Введите новый возраст: ").strip())
+                s.update_age(name, new_age)
+                print("Возраст успешно обновлен!")
+            except (ValueError, BadAgeError, NotFoundError) as e:
+                print(f"Ошибка: {e}")
+
+        elif choice == "5":
+            name = input("\nВведите кличку питомца для удаления: ").strip()
+            try:
+                s.remove(name)
+                print("Питомец удален из базы.")
+            except NotFoundError as e:
+                print(f"Ошибка: {e}")
+
+        elif choice == "6":
+            fmt = input("\nВыберите формат (json / xml): ").strip().lower()
+            if fmt == "json":
+                s.save_json("out.json")
+                print("Данные успешно сохранены в out.json")
+            elif fmt == "xml":
+                s.save_xml("out.xml")
+                print("Данные успешно сохранены в out.xml")
+            else:
+                print("Неизвестный формат!")
+
+        elif choice == "7":
+            fmt = input("\nВыберите формат для загрузки (json / xml): ").strip().lower()
+            try:
+                if fmt == "json":
+                    s.load_json("out.json")
+                    print("Данные успешно загружены из out.json")
+                elif fmt == "xml":
+                    s.load_xml("out.xml")
+                    print("Данные успешно загружены из out.xml")
+                else:
+                    print("Неизвестный формат!")
+            except Exception as e:
+                print(f"Ошибка при загрузке: {e}")
+
+        elif choice == "0":
+            print("Выход из программы. До свидания!")
+            break
+        else:
+            print("Неверный выбор, попробуйте снова от 0 до 7.")
